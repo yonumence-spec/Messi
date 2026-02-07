@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müzik Çalar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .player-section {
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .now-playing {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .now-playing h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .now-playing p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .progress-container {
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background: white;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: white;
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .control-btn.play-pause {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        .playlist-section {
+            padding: 30px 40px;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .playlist-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .add-songs-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .add-songs-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .playlist {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .playlist-item:hover {
+            background: #f5f5f5;
+        }
+
+        .playlist-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .playlist-item-number {
+            width: 30px;
+            font-weight: bold;
+            opacity: 0.6;
+        }
+
+        .playlist-item.active .playlist-item-number {
+            opacity: 1;
+        }
+
+        .playlist-item-info {
+            flex: 1;
+        }
+
+        .playlist-item-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .playlist-item-duration {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-playlist {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-playlist h4 {
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-section">
+            <div class="now-playing">
+                <h2 id="currentSongTitle">Şarkı Seçilmedi</h2>
+                <p id="currentSongArtist">Şarkı eklemek için aşağıdaki butona tıklayın</p>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" id="prevBtn">⏮</button>
+                <button class="control-btn play-pause" id="playPauseBtn">▶</button>
+                <button class="control-btn" id="nextBtn">⏭</button>
+            </div>
+        </div>
+
+        <div class="playlist-section">
+            <div class="playlist-header">
+                <h3>Çalma Listesi</h3>
+                <label for="fileInput" class="add-songs-btn">+ Şarkı Ekle</label>
+                <input type="file" id="fileInput" accept="audio/*" multiple>
+            </div>
+
+            <div id="playlistContainer" class="playlist">
+                <div class="empty-playlist">
+                    <h4>Çalma listesi boş</h4>
+                    <p>Şarkılarınızı eklemek için yukarıdaki butona tıklayın</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const currentSongTitle = document.getElementById('currentSongTitle');
+        const currentSongArtist = document.getElementById('currentSongArtist');
+        const fileInput = document.getElementById('fileInput');
+        const playlistContainer = document.getElementById('playlistContainer');
+
+        let playlist = [];
+        let currentIndex = 0;
+
+        // Şarkı ekleme
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                const songName = file.name.replace(/\.[^/.]+$/, "");
+                
+                playlist.push({
+                    name: songName,
+                    url: url,
+                    file: file
+                });
+            });
+
+            renderPlaylist();
+            
+            if (playlist.length === files.length) {
+                loadSong(0);
+            }
+        });
+
+        // Çalma listesini render et
+        function renderPlaylist() {
+            if (playlist.length === 0) {
+                playlistContainer.innerHTML = `
+                    <div class="empty-playlist">
+                        <h4>Çalma listesi boş</h4>
+                        <p>Şarkılarınızı eklemek için yukarıdaki butona tıklayın</p>
+                    </div>
+                `;
+                return;
+            }
+
+            playlistContainer.innerHTML = playlist.map((song, index) => `
+                <div class="playlist-item ${index === currentIndex ? 'active' : ''}" data-index="${index}">
+                    <div class="playlist-item-number">${index + 1}</div>
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-title">${song.name}</div>
+                        <div class="playlist-item-duration" id="duration-${index}">--:--</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Playlist item'lara tıklama olayı ekle
+            document.querySelectorAll('.playlist-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    loadSong(index);
+                    audioPlayer.play();
+                });
+            });
+        }
+
+        // Şarkı yükle
+        function loadSong(index) {
+            if (playlist.length === 0) return;
+            
+            currentIndex = index;
+            const song = playlist[currentIndex];
+            
+            audioPlayer.src = song.url;
+            currentSongTitle.textContent = song.name;
+            currentSongArtist.textContent = `${currentIndex + 1} / ${playlist.length}`;
+            
+            renderPlaylist();
+        }
+
+        // Play/Pause
+        playPauseBtn.addEventListener('click', function() {
+            if (playlist.length === 0) return;
+            
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseBtn.textContent = '⏸';
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.textContent = '▶';
+            }
+        });
+
+        // Önceki şarkı
+        prevBtn.addEventListener('click', function() {
+            if (playlist.length === 0) return;
+            
+            currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+            loadSong(currentIndex);
+            audioPlayer.play();
+        });
+
+        // Sonraki şarkı
+        nextBtn.addEventListener('click', function() {
+            if (playlist.length === 0) return;
+            
+            currentIndex = (currentIndex + 1) % playlist.length;
+            loadSong(currentIndex);
+            audioPlayer.play();
+        });
+
+        // Şarkı bitince otomatik geçiş
+        audioPlayer.addEventListener('ended', function() {
+            currentIndex = (currentIndex + 1) % playlist.length;
+            loadSong(currentIndex);
+            audioPlayer.play();
+        });
+
+        // Progress bar güncelleme
+        audioPlayer.addEventListener('timeupdate', function() {
+            const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progress.style.width = progressPercent + '%';
+            
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        });
+
+        // Progress bar'a tıklayarak atlama
+        progressBar.addEventListener('click', function(e) {
+            if (playlist.length === 0) return;
+            
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            
+            audioPlayer.currentTime = (clickX / width) * duration;
+        });
+
+        // Zaman formatı
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Şarkı yüklendiğinde süreyi göster
+        audioPlayer.addEventListener('loadedmetadata', function() {
+            const durationElement = document.getElementById(`duration-${currentIndex}`);
+            if (durationElement) {
+                durationElement.textContent = formatTime(audioPlayer.duration);
+            }
+        });
+    </script>
+</body>
+</html>
